@@ -31,13 +31,13 @@ export const PropertiesSchema = new mongoose.Schema({
 
 export interface Properties extends mongoose.Document {
     // serverIp: string;
-    name: string,
-    category: string,
-    description: string,
-    purchaseDate: Date,
-    warranty: number,
-    purchaseCost: number,
-    status: string,
-    port: Number,
+    name: string;
+    category: string;
+    description: string;
+    purchaseDate: Date;
+    warranty: number;
+    purchaseCost: number;
+    status: string;
+    port: number;
     attachments: string[];
 }

@@ -40,7 +40,7 @@ export class EmployeesService {
             gender: body.gender,
             organization: body.organization,
             property: body.property,
-            workingStatus: body.workingStatus
+            workingStatus: body.workingStatus,
         });
         const result = await newImapAccount.save();
         return result;

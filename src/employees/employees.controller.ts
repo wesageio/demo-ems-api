@@ -141,33 +141,6 @@ export class EmployeesController {
     ) {
         this.logger.debug(`PUT/imapAccounts - update imap accounts`, 'debug');
         await this.employeesService.updateImapAccounts(body.ids, body.playPauseStatus);
-        // const catcherRequestBody = await this.employeesService.getManyImapAccounts(body);
-        // const filteredData = filterDataWithServerId(catcherRequestBody.data, body);
-        // const promises = filteredData.map((imapAccount) => {
-        //     const serverIp = imapAccount[0].serverId.serverIp;
-        //     const serverPort = imapAccount[0].serverId.port;
-        //     const status = imapAccount[0].playPauseStatus ? 'start' : 'stop';
-        //     return axios.put(`http://${serverIp}:${serverPort}/imapAccounts/${status}`, imapAccount);
-        // });
-        // const contents = await Promise.all(promises);
-        // const failed = [];
-        // contents.map(async (item) => {
-        //     const email = JSON.parse(item.config.data);
-        //     if (item.status !== 200) {
-        //         failed.push(email);
-        //     }
-        // });
-        // if (failed.length !== 0) {
-        //     return res.send(failed.map(item => {
-        //         this.logger.warn(`PUT:ids/ update imap accounts action's status - ${body.playPauseStatus ? 'start' : 'stop'} ${item.user}`, 'warn');
-        //         return item;
-        //     }));
-        // } else {
-        //     catcherRequestBody.data.forEach((item) => {
-        //         this.logger.log(`PUT:ids/ update imap accounts action\'s status - ${item.playPauseStatus ? 'start' : 'stop'} ${item.user}`, 'log');
-        //     });
-        //     return res.status(200).json([]);
-        // }
     }
 
     @Delete(':id')
