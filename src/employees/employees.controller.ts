@@ -32,164 +32,86 @@ export class EmployeesController {
     ) { }
 
     @Post()
-    async addImapAccount(
+    async addEmployee(
         @Res() res,
-        @Body() ImapAccountBody: Employees,
+        @Body() EmployeeBody: Employees,
     ) {
-        this.logger.debug(`POST/imapAccounts - addImapAccount ${ImapAccountBody.firstName}`, 'debug');
-        const data = await this.employeesService.insertImapAccount(ImapAccountBody);
+        this.logger.debug(`POST/employees - addEmployee ${EmployeeBody.firstName}`, 'debug');
+        const data = await this.employeesService.insertEmployee(EmployeeBody);
         if (!data) {
             throw new NotFoundException('Id does not exist!');
         }
         return res.status(200).json({
-            message: 'Imap Account has been successfully creted',
+            message: 'Employee has been successfully creted',
             data,
         });
     }
 
     @Get()
-    async getAllImapAccounts(
+    async getAllEmployees(
         @Query('filter') filter: string,
         @Query('limit') limit: string,
         @Query('page') page: string,
         @Query('orderBy') orderBy: string,
         @Query('orderDir') orderDir: string,
     ) {
-        this.logger.debug(`GET/imapAccounts/ - get all Imap Accounts`, 'debug');
-        const imapAccounts = await this.employeesService.getImapAccounts(filter, limit, page, orderBy, orderDir);
-        return imapAccounts;
+        this.logger.debug(`GET/employees/ - get all Employees`, 'debug');
+        const employees = await this.employeesService.getEmployees(filter, limit, page, orderBy, orderDir);
+        return employees;
     }
 
     @Get(':id')
-    getImapAccount(@Param('id') imapAccountId: string) {
-        this.logger.debug(`GET/imapAccounts/:id - get imap account ${imapAccountId}`, 'debug');
-        return this.employeesService.getImapAccount(imapAccountId);
-    }
-
-    @Put(':id/status')
-    async updateImapAccountStatus(
-        @Param('id') id: string,
-        @Body() ImapAccountBody: Employees,
-    ) {
-        this.logger.debug(`PUT:id/status - update status of imap account ${ImapAccountBody.workingStatus}`, 'debug');
-        const currentImapAccount = await this.employeesService.getOneAccounts(id);
-        if (currentImapAccount.length === 0) {
-            this.logger.warn(`PUT:id/status update status - ${id} does not exist!`);
-            return null;
-        }
-        const updated = await this.employeesService.updateImapAccount(id, ImapAccountBody);
-        if (!updated) {
-            throw new NotFoundException('Id does not exist!');
-        }
-        this.logger.log(`PUT:id/status update status - ${updated.user} successfully updated`);
-        this.gateway.wss.emit('getImapAccounts', { data: updated, resource: 'imapAccounts' });
+    getEmployee(@Param('id') employeeId: string) {
+        this.logger.debug(`GET/employees/:id - get employee ${employeeId}`, 'debug');
+        return this.employeesService.getEmployee(employeeId);
     }
 
     @Put(':id')
-    async updateImapAccount(
+    async updateEmployee(
         @Res() res,
         @Param('id') id: string,
-        @Body() ImapAccountBody: Employees,
+        @Body() EmployeeBody: Employees,
     ) {
-        this.logger.debug(`PUT/imapAccounts/:id - update imap account`, 'debug');
-        // if (ImapAccountBody.serverId) {
-        //     this.logger.debug(`PUT/imapAccounts/:id - update imap account's server`, 'debug');
-        //     const catcherRequestBody = await this.employeesService.getOneAccounts(id);
-        //     if (catcherRequestBody[0].playPauseStatus === true && catcherRequestBody[0].serverId) {
-        //         const oldIp = catcherRequestBody[0].serverId.serverIp;
-        //         const oldPort = catcherRequestBody[0].serverId.port;
-        //         const emailCatcherStop = await axios.put(`http://${oldIp}:${oldPort}/imapAccounts/stop`, catcherRequestBody);
-        //         if (emailCatcherStop.status !== 200) {
-        //             this.logger.warn(`PUT:id/ update imap - ${catcherRequestBody[0].user} could not stop`);
-        //             throw new InternalServerErrorException('Could not change status of IMAP accounts!');
-        //         } else {
-        //             this.logger.log(`PUT:id/ update imap - ${oldIp} successfully stoped`);
-        //             const serverId = await this.proeprtiesService.getServer(ImapAccountBody.serverId);
-        //             const newIpStart = serverId.server.serverIp;
-        //             const newPortStart = serverId.server.port;
-        //             const emailCatcherStart = await axios.put(`http://${newIpStart}:${newPortStart}/imapAccounts/start`, catcherRequestBody);
-        //             if (emailCatcherStart.status !== 200) {
-        //                 this.logger.warn(`PUT:id/ update imap - ${catcherRequestBody[0].user} could not start`);
-        //                 throw new InternalServerErrorException('Could not change status of IMAP accounts!');
-        //             }
-        //             this.logger.log(`PUT:id/ update imap - ${newIpStart} successfully started`);
-        //         }
-        //     }
-        // }
-        const updated = await this.employeesService.updateImapAccount(id, ImapAccountBody);
+        this.logger.debug(`PUT/employees/:id - update employee`, 'debug');
+        const updated = await this.employeesService.updateEmployee(id, EmployeeBody);
         if (!updated) {
             throw new NotFoundException('Id does not exist!');
         }
-        this.gateway.wss.emit('getImapAccounts', { data: updated, resource: 'imapAccounts' });
-        // if (updated.serverId) {
-        //     const response = await axios.put(`http://${updated.serverId.serverIp}:${updated.serverId.port}/imapAccounts`, [updated]);
-        //     if (response.status === 200) {
-        //         this.logger.log(`PUT:id/ update imap - ${updated.user} successfully updated`, 'log');
-        //     } else {
-        //         this.logger.error(`PUT:id/ update imap - ${updated.user} failed to update`, 'error');
-        //     }
-        // }
+        this.gateway.wss.emit('getImapAccounts', { data: updated, resource: 'employees' });
         return res.status(200).json({
-            message: 'Imap Account has been successfully updated',
+            message: 'Employee has been successfully updated',
             updated,
         });
     }
 
     @Put()
-    async updateImapAccounts(
+    async updateEmployees(
         @Res() res, @Body() body,
     ) {
-        this.logger.debug(`PUT/imapAccounts - update imap accounts`, 'debug');
-        await this.employeesService.updateImapAccounts(body.ids, body.playPauseStatus);
+        this.logger.debug(`PUT/employees - update employees`, 'debug');
+        await this.employeesService.updateEmployees(body.ids, body.playPauseStatus);
     }
 
     @Delete(':id')
-    async removeImapAccount(@Res() res, @Param('id') imapAccountId: string) {
-        this.logger.debug(`DELETE/imapAccounts/:id - delete imap account`, 'debug');
-        const currentImapAccount = await this.employeesService.getOneAccounts(imapAccountId);
-        // const serverIp = currentImapAccount[0].serverId.serverIp;
-        // const serverPort = currentImapAccount[0].serverId.port;
-        const deleteImapAccount = await this.employeesService.deleteImapAccount(imapAccountId);
-        // if (!deleteImapAccount) {
-        //     throw new NotFoundException('Id does not exist!');
-        // }
-        // if (currentImapAccount && currentImapAccount[0].serverId) {
-        //     this.logger.debug(`DELETE/imapAccounts/:id - stop imap account`, 'debug');
-        //     const response = await axios.put(`http://${serverIp}:${serverPort}/imapAccounts/stop`, currentImapAccount);
-        //     if (response.status === 200) {
-        //         this.logger.log(`STOP/imapAccounts/:id - ${currentImapAccount[0].user} successfully stoped`, 'log');
-        //     } else {
-        //         this.logger.error(`STOP/imapAccounts/:id - ${currentImapAccount[0].user} failed to stop`, 'error');
-        //     }
-        // }
+    async removeEmployee(@Res() res, @Param('id') employeeId: string) {
+        this.logger.debug(`DELETE/employees/:id - delete employee`, 'debug');
+        const deleteEmployee = await this.employeesService.deleteEmployee(employeeId);
         return res.status(200).json({
-            message: 'Imap Account has been successfully deleted',
-            deleteImapAccount,
+            message: 'Employee has been successfully deleted',
+            deleteEmployee,
         });
     }
 
     @Delete()
-    async removeImapAccounts(@Res() res, @Body() ids) {
-        this.logger.debug(`DELETE/imapAccounts/ - delete imap accounts ${ids.ids}`, 'debug');
-        const deletedImapAccounts = await this.employeesService.deleteImapAccounts(ids);
-        if (!deletedImapAccounts) {
+    async removeEmployees(@Res() res, @Body() ids) {
+        this.logger.debug(`DELETE/employees/ - delete employees ${ids.ids}`, 'debug');
+        const deletedEmployees = await this.employeesService.deleteEmployees(ids);
+        if (!deletedEmployees) {
             throw new NotFoundException('Id does not exist!');
         }
-        const catcherRequestBody = await this.employeesService.getManyImapAccounts(ids);
-        const filteredData = filterDataWithServerId(catcherRequestBody.data, false);
-        filteredData.forEach(async (imapAccount) => {
-            const serverIp = imapAccount[0].serverId.serverIp;
-            const serverPort = imapAccount[0].serverId.port;
-            const response = await axios.put(`http://${serverIp}:${serverPort}/imapAccounts/stop`, imapAccount);
-            if (response.status === 200) {
-                this.logger.log(`STOP/imapAccounts/ - successfully stoped`, 'log');
-            } else {
-                this.logger.error(`STOP/imapAccounts/ - failed to stop`, 'error');
-            }
-        });
         return res.status(200).json({
-            message: 'Imap Accounts has been successfully deleted',
-            deletedImapAccounts,
+            message: 'Employees has been successfully deleted',
+            deletedEmployees,
         });
     }
 }

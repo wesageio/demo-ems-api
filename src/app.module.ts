@@ -10,9 +10,10 @@ import { RulesModule } from './rules/rules.module';
 import { EmployeesModule } from './employees/employees.module';
 import { SettingsModule } from './settings/settings.module';
 import { EmailsModule } from './emails/emails.module';
-import { SocksModule } from './socks/socks.module';
+import { SocksModule } from './organizations/organizations.module';
 import { PropertiesModule } from './properties/properties.module';
 import { AppGateway } from './app.gateway';
+import { FileManagerModule } from './common/fileManager/FileManager.module';
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { AppGateway } from './app.gateway';
             isGlobal: true,
         }),
         ScheduleModule.forRoot(),
+        FileManagerModule,
         UsersModule,
         RulesModule,
         EmployeesModule,

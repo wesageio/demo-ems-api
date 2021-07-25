@@ -6,6 +6,7 @@
   },
   "rules": {
     "quotemark": [true, "single"],
+    "array-type": false,
     "no-var-requires": [false],
     "member-access": [false],
     "object-literal-shorthand": false,

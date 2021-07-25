@@ -4,31 +4,20 @@ import { Model } from 'mongoose';
 
 import { Properties } from './properties.model';
 import { filterForQuery, writeData } from '../utils/utils';
+import { HdfsFileManagerService } from '../common/fileManager/HdfsFileManager.service';
+import { IFileManager } from '../common/fileManager/IFileManager.interface';
 
 @Injectable()
 export class PropertiesService {
     constructor(
         @InjectModel('Properties') private readonly propertiesModel: Model<Properties>,
-    ) {
-        // this.proeprtiesModel.collection.countDocuments().then(async (res) => {
-        //     if (res === 0) {
-        //         const initialized = await this.insertRule({
-        //             keyword: 'example',
-        //             category: 'FROM',
-        //             isIgnore: true,
-        //             isActive: false,
-        //         });
-        //         if (initialized) {
-        //             console.log('Rule initialized');
-        //         }
-        //     }
-        // });
-    }
+        private fileManager: IFileManager,
+    ) { }
 
-    async insertServer(body) {
-        const modifiedAttachments = await writeData(body.attachments);
+    async insertProeprty(body) {
+        const modifiedAttachments = await this.fileManager.insertFile(body.attachments);
         const data = Object.assign({}, body, { attachments: modifiedAttachments ? modifiedAttachments : body.attachments });
-        const newServer = new this.propertiesModel({
+        const newProperty = new this.propertiesModel({
             name: body.name,
             category: body.category,
             description: body.description,
@@ -38,11 +27,11 @@ export class PropertiesService {
             status: body.status,
             attachments: data.attachments,
         });
-        const result = await newServer.save();
+        const result = await newProperty.save();
         return result;
     }
 
-    async getServers(filter: string, limit: string, page: string, orderBy: string, orderDir: string) {
+    async getProperties(filter: string, limit: string, page: string, orderBy: string, orderDir: string) {
         const parsedFilter = JSON.parse(filter);
         const filterData = filterForQuery(parsedFilter);
         const maxNumber = parseInt(limit);
@@ -63,7 +52,7 @@ export class PropertiesService {
         };
     }
 
-    async getManyServers(filter: any) {
+    async getManyProperties(filter: any) {
         const data = await this.propertiesModel
             .find({ _id: { $in: filter.id }})
             .exec();
@@ -74,36 +63,36 @@ export class PropertiesService {
         };
     }
 
-    async getServer(serverId: string) {
-        const server = await this.findServer(serverId);
-        return { server };
+    async getProperty(propertyId: string) {
+        const property = await this.findProperty(propertyId);
+        return { property };
     }
 
-    async updateServer(id, body): Promise<any> {
-        const modifiedAttachments = await writeData(body.attachments);
+    async updateProperty(id, body): Promise<any> {
+        const modifiedAttachments = await this.fileManager.insertFile(body.attachments);
         const data = Object.assign({}, body, { attachments: modifiedAttachments ? modifiedAttachments : body.attachments });
         return await this.propertiesModel.findByIdAndUpdate(id, data, { new: true });
     }
 
-    async deleteServer(serverId: string) {
-        return await this.propertiesModel.deleteOne({ _id: serverId }).exec();
+    async deleteProperty(propertyId: string) {
+        return await this.propertiesModel.deleteOne({ _id: propertyId }).exec();
     }
 
-    async deleteServers(serverIds): Promise<any> {
-        const { ids } = serverIds;
+    async deleteProperties(propertyIds): Promise<any> {
+        const { ids } = propertyIds;
         return await this.propertiesModel.deleteMany({ _id: { $in: ids } });
     }
 
-    private async findServer(id: string): Promise<Properties> {
-        let server;
+    private async findProperty(id: string): Promise<Properties> {
+        let property;
         try {
-            server = await this.propertiesModel.findById(id).exec();
+            property = await this.propertiesModel.findById(id).exec();
         } catch (error) {
-            throw new NotFoundException('Could not find server.');
+            throw new NotFoundException('Could not find property.');
         }
-        if (!server) {
-            throw new NotFoundException('Could not find server.');
+        if (!property) {
+            throw new NotFoundException('Could not find property.');
         }
-        return server;
+        return property;
     }
 }

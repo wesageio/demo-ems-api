@@ -27,96 +27,96 @@ export class PropertiesController {
         private employeesService: EmployeesService,
     ) { }
 
-    removeServerFromImapAccounts = (imapAccounts) => {
-        imapAccounts.forEach(async (imapAccount) => {
-            await this.employeesService.removeServerFromImap(imapAccount);
+    removeDeletedPropertiesFromEmployees = (employees) => {
+        employees.forEach(async (employee) => {
+            await this.employeesService.removeDeletedPropertiesFromEmployees(employee);
         });
     }
 
     @Post()
-    async addServer(
+    async addProperty(
         @Res() res,
-        @Body() ServersBody: Properties,
+        @Body() PropertyBody: Properties,
     ) {
-        this.logger.debug(`POST/servers/ - add server`, 'debug');
-        const data = await this.propertiesService.insertServer(ServersBody);
+        this.logger.debug(`POST/properties/ - add proeprty`, 'debug');
+        const data = await this.propertiesService.insertProeprty(PropertyBody);
         if (!data) {
             throw new Error('Failed to create');
         }
         return res.status(200).json({
-            message: 'Server has been successfully created',
+            message: 'Property has been successfully created',
             data,
         });
     }
 
     @Get()
-    async getAllServers(
+    async getAllProperties(
         @Query('filter') filter: string,
         @Query('limit') limit: string,
         @Query('page') page: string,
         @Query('orderBy') orderBy: string,
         @Query('orderDir') orderDir: string,
     ) {
-        this.logger.debug(`GET/servers/ - get all servers`, 'debug');
+        this.logger.debug(`GET/properties/ - get all properties`, 'debug');
         const filteredData = JSON.parse(filter);
         if (filteredData.hasOwnProperty('id') && filteredData.id.length !== 0) {
-            const referencedservers = await this.propertiesService.getManyServers(filteredData);
-            return referencedservers;
+            const referencedProperties = await this.propertiesService.getManyProperties(filteredData);
+            return referencedProperties;
         }
-        const servers = await this.propertiesService.getServers(filter, limit, page, orderBy, orderDir);
-        return servers;
+        const properties = await this.propertiesService.getProperties(filter, limit, page, orderBy, orderDir);
+        return properties;
     }
 
     @Get(':id')
-    getServer(@Param('id') serverId: string) {
-        this.logger.debug(`GET/servers/ - get server`, 'debug');
-        return this.propertiesService.getServer(serverId);
+    getProperty(@Param('id') propertyId: string) {
+        this.logger.debug(`GET/proeprties/ - get property`, 'debug');
+        return this.propertiesService.getProperty(propertyId);
     }
 
     @Put(':id')
-    async updateServer(
+    async updateProperty(
         @Res() res,
         @Param('id') id: string,
-        @Body() ServersBody: Properties,
+        @Body() PropertiesBody: Properties,
     ) {
-        this.logger.debug(`PUT/servers/:id - update server`, 'debug');
-        const updated = await this.propertiesService.updateServer(id, ServersBody);
+        this.logger.debug(`PUT/properties/:id - update property`, 'debug');
+        const updated = await this.propertiesService.updateProperty(id, PropertiesBody);
         if (!updated) {
             throw new NotFoundException('Id does not exist!');
         }
         return res.status(200).json({
-            message: 'Server has been successfully updated',
+            message: 'Property has been successfully updated',
             updated,
         });
     }
 
     @Delete(':id')
-    async removeServer(@Res() res, @Param('id') serverId: string) {
-        this.logger.debug(`DELETE/servers/:id - delete server`, 'debug');
-        const foundSocksRunImapAccounts = await this.employeesService.isExistReferenceInImapAccount(serverId, 'serverId');
-        await this.removeServerFromImapAccounts(foundSocksRunImapAccounts);
-        const serverDelete = await this.propertiesService.deleteServer(serverId);
-        if (!serverDelete) {
+    async removeProperty(@Res() res, @Param('id') propertyId: string) {
+        this.logger.debug(`DELETE/properties/:id - delete property`, 'debug');
+        const foundSocksRunImapAccounts = await this.employeesService.isExistReferenceInEmployee(propertyId, 'property');
+        await this.removeDeletedPropertiesFromEmployees(foundSocksRunImapAccounts);
+        const propertyDelete = await this.propertiesService.deleteProperty(propertyId);
+        if (!propertyDelete) {
             throw new NotFoundException('Id does not exist!');
         }
         return res.status(200).json({
             message: 'Rule has been successfully deleted',
-            serverDelete,
+            propertyDelete,
         });
     }
 
     @Delete()
-    async removeServers(@Res() res, @Body() ids) {
-        this.logger.debug(`DELETE/servers/ - delete servers`, 'debug');
-        const foundSocksRunImapAccounts = await this.employeesService.isExistMultiplsReferenceInImapAccount(ids, 'serverId');
-        await this.removeServerFromImapAccounts(foundSocksRunImapAccounts);
-        const deletedServers = await this.propertiesService.deleteServers(ids);
-        if (!deletedServers) {
+    async removeProperties(@Res() res, @Body() ids) {
+        this.logger.debug(`DELETE/properties/ - delete properties`, 'debug');
+        const foundSocksRunImapAccounts = await this.employeesService.isExistMultiplsReferenceInEmployee(ids, 'property');
+        await this.removeDeletedPropertiesFromEmployees(foundSocksRunImapAccounts);
+        const deletedProperties = await this.propertiesService.deleteProperties(ids);
+        if (!deletedProperties) {
             throw new NotFoundException('Id does not exist!');
         }
         return res.status(200).json({
-            message: 'Servers has been successfully deleted',
-            deletedServers,
+            message: 'Properties has been successfully deleted',
+            deletedProperties,
         });
     }
 }
