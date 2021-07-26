@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-const attachmentsSchema = new mongoose.Schema({ path: String, data: String, type: String, fileName: String });
+const attachmentsSchema = new mongoose.Schema({ fileName: String, data: String, type: String, realFileName: String, s3PresignedUrl: String });
 
 export const PropertiesSchema = new mongoose.Schema({
     // serverIp: String,

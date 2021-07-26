@@ -1,6 +1,6 @@
 {
-  "name": "admin-api",
-  "version": "0.0.1",
+  "name": "demo-ems-api",
+  "version": "0.0.2",
   "description": "",
   "author": "",
   "license": "MIT",
@@ -29,6 +29,7 @@
     "@nestjs/platform-socket.io": "^7.6.13",
     "@nestjs/schedule": "^0.4.2",
     "@nestjs/websockets": "^7.6.13",
+    "aws-sdk": "^2.953.0",
     "axios": "^0.19.2",
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",

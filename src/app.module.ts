@@ -9,7 +9,6 @@ import { UsersModule } from './users/users.module';
 import { RulesModule } from './rules/rules.module';
 import { EmployeesModule } from './employees/employees.module';
 import { SettingsModule } from './settings/settings.module';
-import { EmailsModule } from './emails/emails.module';
 import { SocksModule } from './organizations/organizations.module';
 import { PropertiesModule } from './properties/properties.module';
 import { AppGateway } from './app.gateway';
@@ -27,7 +26,6 @@ import { FileManagerModule } from './common/fileManager/FileManager.module';
         EmployeesModule,
         SocksModule,
         PropertiesModule,
-        EmailsModule,
         SettingsModule,
         MongooseModule.forRoot(
             `mongodb://${process.env.MONGO_HOSTNAME}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`,

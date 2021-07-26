@@ -61,4 +61,8 @@ export class HdfsFileManagerService implements IFileManager {
             return null;
         }
     }
+
+    public async getFiles(files: Array<any>) {
+        return [];
+    }
 }

@@ -26,16 +26,16 @@ export class RulesController {
     ) { }
 
     ruleUpdateEmailCatcher = async () => {
-        const serversList = await this.propertiesService.getServers('{}', '100', '1', 'id', 'ASC');
+        // const serversList = await this.propertiesService.getServers('{}', '100', '1', 'id', 'ASC');
         const rulesList = await this.rulesService.getRules('{"isDeleted":false,"isActive":true}', '100', '1', 'id', 'ASC');
-        serversList.data.forEach(async (item) => {
-            const response = await axios.put(`http://${item.serverIp}:${item.port}/rules`, rulesList.data);
-            if (response.status === 200) {
-                this.logger.log(`PUT/rules/ - successfully updated`, 'log');
-            } else {
-                this.logger.error(`PUT/rules/ - failed to update`, 'error');
-            }
-        });
+        // serversList.data.forEach(async (item) => {
+        //     const response = await axios.put(`http://${item.serverIp}:${item.port}/rules`, rulesList.data);
+        //     if (response.status === 200) {
+        //         this.logger.log(`PUT/rules/ - successfully updated`, 'log');
+        //     } else {
+        //         this.logger.error(`PUT/rules/ - failed to update`, 'error');
+        //     }
+        // });
     }
 
     @Post()
