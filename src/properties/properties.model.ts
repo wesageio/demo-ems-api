@@ -23,7 +23,7 @@ export const PropertiesSchema = new mongoose.Schema({
     purchaseCost: Number,
     status: {
         type: String,
-        enum: ['Active', 'Reparation', 'BrokenNotFixable', 'Archived'],
+        enum: ['Active', 'Reparation', 'Broken', 'Archived'],
     },
     port: Number,
     attachments: [attachmentsSchema],
