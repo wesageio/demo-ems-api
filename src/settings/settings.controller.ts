@@ -10,14 +10,14 @@ import {
 } from '@nestjs/common';
 
 import { SettingsService } from './settings.service';
-import { UsersService } from '../users/users.service';
 import { Settings } from './settings.model';
+import { AuthService } from '../auth/auth.service';
 
 @Controller('settings')
 export class SettingsController {
     constructor(
         private readonly settingsService: SettingsService,
-        private usersService: UsersService,
+        private usersService: AuthService,
     ) { }
     @Post()
     async createSettings(
@@ -36,23 +36,23 @@ export class SettingsController {
         return this.settingsService.getSetting(settingsId);
     }
 
-    @Put(':id')
-    async updateSettings(
-        @Res() res,
-        @Param('id') id: string,
-        @Body() SettingsBody: any,
-    ) {
-        const userId = SettingsBody.userId;
-        const updated = await this.settingsService.updateSettings(id, SettingsBody);
-        if (!updated) {
-            throw new NotFoundException('Id does not exist!');
-        }
-        if (SettingsBody.hasOwnProperty('newPassword')) {
-            await this.usersService.updateUser(userId, SettingsBody);
-        }
-        return res.status(200).json({
-            message: 'Settings has been successfully updated',
-            updated,
-        });
-    }
+    // @Put(':id')
+    // async updateSettings(
+    //     @Res() res,
+    //     @Param('id') id: string,
+    //     @Body() SettingsBody: any,
+    // ) {
+    //     const userId = SettingsBody.userId;
+    //     const updated = await this.settingsService.updateSettings(id, SettingsBody);
+    //     if (!updated) {
+    //         throw new NotFoundException('Id does not exist!');
+    //     }
+    //     if (SettingsBody.hasOwnProperty('newPassword')) {
+    //         await this.usersService.updateUser(userId, SettingsBody);
+    //     }
+    //     return res.status(200).json({
+    //         message: 'Settings has been successfully updated',
+    //         updated,
+    //     });
+    // }
 }

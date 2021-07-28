@@ -13,7 +13,7 @@ export class PropertiesService {
         private fileManager: IFileManager,
     ) { }
 
-    async insertProeprty(body) {
+    async insertProperty(body) {
         const modifiedAttachments = await this.fileManager.insertFile(body.attachments);
         const data = Object.assign({}, body, { attachments: modifiedAttachments ? modifiedAttachments : body.attachments });
         const newProperty = new this.propertiesModel({

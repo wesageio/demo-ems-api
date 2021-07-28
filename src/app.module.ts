@@ -5,14 +5,13 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
-import { RulesModule } from './rules/rules.module';
 import { EmployeesModule } from './employees/employees.module';
 import { SettingsModule } from './settings/settings.module';
-import { SocksModule } from './organizations/organizations.module';
+import { OrganizationsModule } from './organizations/organizations.module';
 import { PropertiesModule } from './properties/properties.module';
 import { AppGateway } from './app.gateway';
 import { FileManagerModule } from './common/fileManager/FileManager.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
     imports: [
@@ -20,11 +19,10 @@ import { FileManagerModule } from './common/fileManager/FileManager.module';
             isGlobal: true,
         }),
         ScheduleModule.forRoot(),
+        AuthModule,
         FileManagerModule,
-        UsersModule,
-        RulesModule,
         EmployeesModule,
-        SocksModule,
+        OrganizationsModule,
         PropertiesModule,
         SettingsModule,
         MongooseModule.forRoot(

@@ -12,11 +12,16 @@ import {
     Logger,
     Inject,
     forwardRef,
+    UseGuards,
+    Req,
 } from '@nestjs/common';
 
 import { PropertiesService } from './properties.service';
 import { Properties } from './properties.model';
 import { EmployeesService } from '../employees/employees.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtService } from '@nestjs/jwt';
+import { decode } from 'jsonwebtoken';
 
 @Controller('properties')
 export class PropertiesController {
@@ -27,19 +32,20 @@ export class PropertiesController {
         private employeesService: EmployeesService,
     ) { }
 
-    removeDeletedPropertiesFromEmployees = (employees) => {
+    removeAlreadyDeletedPropertiesFromEmployees = (employees, propertyId) => {
         employees.forEach(async (employee) => {
-            await this.employeesService.removeDeletedPropertiesFromEmployees(employee);
+            await this.employeesService.removeDeletedPropertiesFromEmployees(employee, propertyId);
         });
     }
 
+    @UseGuards(JwtAuthGuard)
     @Post()
     async addProperty(
         @Res() res,
         @Body() PropertyBody: Properties,
     ) {
-        this.logger.debug(`POST/properties/ - add proeprty`, 'debug');
-        const data = await this.propertiesService.insertProeprty(PropertyBody);
+        this.logger.debug(`POST/properties/ - add property`, 'debug');
+        const data = await this.propertiesService.insertProperty(PropertyBody);
         if (!data) {
             throw new Error('Failed to create');
         }
@@ -49,14 +55,17 @@ export class PropertiesController {
         });
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get()
     async getAllProperties(
+        @Req() req,
         @Query('filter') filter: string,
         @Query('limit') limit: string,
         @Query('page') page: string,
         @Query('orderBy') orderBy: string,
         @Query('orderDir') orderDir: string,
     ) {
+        console.log(decode(req.headers.authorization.replace(/^Bearer\s+/, '')));
         this.logger.debug(`GET/properties/ - get all properties`, 'debug');
         const filteredData = JSON.parse(filter);
         if (filteredData.hasOwnProperty('id') && filteredData.id.length !== 0) {
@@ -67,12 +76,14 @@ export class PropertiesController {
         return properties;
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get(':id')
     getProperty(@Param('id') propertyId: string) {
-        this.logger.debug(`GET/proeprties/ - get property`, 'debug');
+        this.logger.debug(`GET/properties/ - get property`, 'debug');
         return this.propertiesService.getProperty(propertyId);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Put(':id')
     async updateProperty(
         @Res() res,
@@ -90,11 +101,12 @@ export class PropertiesController {
         });
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete(':id')
     async removeProperty(@Res() res, @Param('id') propertyId: string) {
         this.logger.debug(`DELETE/properties/:id - delete property`, 'debug');
-        const foundSocksRunImapAccounts = await this.employeesService.isExistReferenceInEmployee(propertyId, 'property');
-        await this.removeDeletedPropertiesFromEmployees(foundSocksRunImapAccounts);
+        const foundEmployeesWithProperty = await this.employeesService.isExistReferenceInEmployee(propertyId, 'property');
+        await this.removeAlreadyDeletedPropertiesFromEmployees(foundEmployeesWithProperty, [propertyId]);
         const propertyDelete = await this.propertiesService.deleteProperty(propertyId);
         if (!propertyDelete) {
             throw new NotFoundException('Id does not exist!');
@@ -105,12 +117,13 @@ export class PropertiesController {
         });
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete()
-    async removeProperties(@Res() res, @Body() ids) {
+    async removeProperties(@Res() res, @Body() propertiesIds) {
         this.logger.debug(`DELETE/properties/ - delete properties`, 'debug');
-        const foundSocksRunImapAccounts = await this.employeesService.isExistMultiplsReferenceInEmployee(ids, 'property');
-        await this.removeDeletedPropertiesFromEmployees(foundSocksRunImapAccounts);
-        const deletedProperties = await this.propertiesService.deleteProperties(ids);
+        const foundEmployeesWithProperties = await this.employeesService.isExistMultiplsReferenceInEmployee(propertiesIds, 'property');
+        await this.removeAlreadyDeletedPropertiesFromEmployees(foundEmployeesWithProperties, propertiesIds.ids);
+        const deletedProperties = await this.propertiesService.deleteProperties(propertiesIds);
         if (!deletedProperties) {
             throw new NotFoundException('Id does not exist!');
         }

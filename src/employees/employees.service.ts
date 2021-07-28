@@ -111,9 +111,9 @@ export class EmployeesService {
             { upsert: true });
     }
 
-    async removeDeletedPropertiesFromEmployees(ids): Promise<any> {
-        return await this.employeesModel.updateMany({ _id: { $in: ids } },
-            { $pull: { property: { $in: ids.property } } },
+    async removeDeletedPropertiesFromEmployees(employee, propertyId): Promise<any> {
+        return await this.employeesModel.updateMany({ _id: employee._id },
+            { $pull: { property: { $in: propertyId } } },
             { upsert: true });
     }
 

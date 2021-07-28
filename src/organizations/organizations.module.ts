@@ -14,4 +14,4 @@ import { EmployeesModule } from '../employees/employees.module';
   controllers: [OrganizationsController],
   providers: [OrganizationsService],
 })
-export class SocksModule {}
+export class OrganizationsModule {}

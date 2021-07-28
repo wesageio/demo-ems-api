@@ -4,12 +4,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SettingsController } from './settings.controller';
 import { SettingsService } from './settings.service';
 import { SettingsSchema } from './settings.model';
-import { UsersModule } from '../users/users.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Settings', schema: SettingsSchema }]),
-    UsersModule,
+    AuthModule,
   ],
   controllers: [SettingsController],
   providers: [SettingsService],

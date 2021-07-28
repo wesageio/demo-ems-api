@@ -12,14 +12,14 @@ import {
     Logger,
     forwardRef,
     Inject,
+    UseGuards,
 } from '@nestjs/common';
-import axios from 'axios';
 
 import { EmployeesService } from './employees.service';
 import { Employees } from './employees.model';
-import { filterDataWithServerId } from '../utils/utils';
 import { PropertiesService } from '../properties/properties.service';
 import { AppGateway } from '../app.gateway';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('employees')
 export class EmployeesController {
@@ -27,10 +27,10 @@ export class EmployeesController {
     constructor(
         private readonly employeesService: EmployeesService,
         @Inject(forwardRef(() => PropertiesService))
-        private proeprtiesService: PropertiesService,
         private gateway: AppGateway,
     ) { }
 
+    @UseGuards(JwtAuthGuard)
     @Post()
     async addEmployee(
         @Res() res,
@@ -47,6 +47,7 @@ export class EmployeesController {
         });
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get()
     async getAllEmployees(
         @Query('filter') filter: string,
@@ -60,12 +61,14 @@ export class EmployeesController {
         return employees;
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get(':id')
     getEmployee(@Param('id') employeeId: string) {
-        this.logger.debug(`GET/employees/:id - get employee ${employeeId}`, 'debug');
+        // this.logger.debug(`GET/employees/:id - get employee ${employeeId}`, 'debug');
         return this.employeesService.getEmployee(employeeId);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Put(':id')
     async updateEmployee(
         @Res() res,
@@ -77,13 +80,13 @@ export class EmployeesController {
         if (!updated) {
             throw new NotFoundException('Id does not exist!');
         }
-        this.gateway.wss.emit('getImapAccounts', { data: updated, resource: 'employees' });
         return res.status(200).json({
             message: 'Employee has been successfully updated',
             updated,
         });
     }
 
+    @UseGuards(JwtAuthGuard)
     @Put()
     async updateEmployees(
         @Res() res, @Body() body,
@@ -92,6 +95,7 @@ export class EmployeesController {
         await this.employeesService.updateEmployees(body.ids, body.playPauseStatus);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete(':id')
     async removeEmployee(@Res() res, @Param('id') employeeId: string) {
         this.logger.debug(`DELETE/employees/:id - delete employee`, 'debug');
@@ -102,6 +106,7 @@ export class EmployeesController {
         });
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete()
     async removeEmployees(@Res() res, @Body() ids) {
         this.logger.debug(`DELETE/employees/ - delete employees ${ids.ids}`, 'debug');

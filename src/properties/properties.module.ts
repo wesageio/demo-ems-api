@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { PropertiesController } from './properties.controller';
@@ -10,8 +10,8 @@ import { FileManagerModule } from '../common/fileManager/FileManager.module';
 @Module({
     imports: [
         MongooseModule.forFeature([{ name: 'Properties', schema: PropertiesSchema }]),
-        EmployeesModule,
         FileManagerModule,
+        forwardRef(() => EmployeesModule),
     ],
     controllers: [PropertiesController],
     providers: [PropertiesService],

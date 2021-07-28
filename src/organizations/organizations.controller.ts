@@ -10,11 +10,13 @@ import {
     Put,
     NotFoundException,
     Logger,
+    UseGuards,
 } from '@nestjs/common';
 
 import { OrganizationsService } from './organizations.service';
 import { Organizations } from './organizations.model';
 import { EmployeesService } from '../employees/employees.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -28,6 +30,7 @@ export class OrganizationsController {
         await this.employeesService.removeDeletedOrganization(imapAccounts);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Post()
     async addOrganization(
         @Res() res,
@@ -44,6 +47,7 @@ export class OrganizationsController {
         });
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get()
     async getAllOrganizations(
         @Query('filter') filter: string,
@@ -62,12 +66,14 @@ export class OrganizationsController {
         return organizations;
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get(':id')
     getOrganization(@Param('id') organizationId: string) {
         this.logger.debug(`GET/organizations/:id - get organization`, 'debug');
         return this.organizationsService.getOrganization(organizationId);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Put(':id')
     async updateOrganization(
         @Res() res,
@@ -85,6 +91,7 @@ export class OrganizationsController {
         });
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete(':id')
     async removeOrganization(@Res() res, @Param('id') organizationId: string) {
         this.logger.debug(`DELETE/organizations/:id - delete organization`, 'debug');
@@ -102,6 +109,7 @@ export class OrganizationsController {
         });
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete()
     async removeOrganizations(@Res() res, @Body() ids) {
         this.logger.debug(`DELETE/organizations/ - delete organizations`, 'debug');
