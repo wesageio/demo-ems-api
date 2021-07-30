@@ -5,6 +5,7 @@ import {
     Request,
     UseGuards,
     ValidationPipe,
+    Res,
 } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
@@ -17,9 +18,20 @@ export class AuthController {
 
     @Post('/signup')
     async signUp(
+        @Res() res,
         @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
     ): Promise<void> {
-        return await this.authService.signUp(authCredentialsDto);
+        const user = await this.authService.signUp(authCredentialsDto);
+        if (user) {
+            return res.status(200).json({
+                message: 'User has been successfully created',
+                user,
+            });
+        } else {
+            return res.status(200).json({
+                message: 'User exist',
+            });
+        }
     }
 
     @UseGuards(LocalAuthGuard)

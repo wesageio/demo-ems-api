@@ -11,16 +11,18 @@ import {
     NotFoundException,
     Logger,
     UseGuards,
+    Req,
 } from '@nestjs/common';
 
 import { OrganizationsService } from './organizations.service';
-import { Organizations } from './organizations.model';
+import { CreateOrganizationDto } from './dto/create-organizations.dto';
 import { EmployeesService } from '../employees/employees.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { getUserIdFromToken } from '../utils/utils';
 
 @Controller('organizations')
 export class OrganizationsController {
-    logger = new Logger('OrganizationsController');
+    private readonly logger = new Logger('OrganizationsController');
     constructor(
         private readonly organizationsService: OrganizationsService,
         private employeesService: EmployeesService,
@@ -34,10 +36,11 @@ export class OrganizationsController {
     @Post()
     async addOrganization(
         @Res() res,
-        @Body() OrganizationBody: Organizations,
+        @Body() OrganizationBody: CreateOrganizationDto,
     ) {
         this.logger.debug(`POST/organizations/ - add organization`, 'debug');
-        const data = await this.organizationsService.insertOrganization(OrganizationBody);
+        const userId = getUserIdFromToken(res.req.headers.authorization);
+        const data = await this.organizationsService.insertOrganization(OrganizationBody, userId);
         if (!data) {
             throw new Error('Failed to create');
         }
@@ -50,6 +53,7 @@ export class OrganizationsController {
     @UseGuards(JwtAuthGuard)
     @Get()
     async getAllOrganizations(
+        @Req() req,
         @Query('filter') filter: string,
         @Query('limit') limit: string,
         @Query('page') page: string,
@@ -58,19 +62,24 @@ export class OrganizationsController {
     ) {
         this.logger.debug(`GET/organizations/ - get all organizations`, 'debug');
         const filteredData = JSON.parse(filter);
+        const userId = getUserIdFromToken(req.headers.authorization);
         if (filteredData.hasOwnProperty('id') && filteredData.id.length !== 0) {
             const referencedOrganizations = await this.organizationsService.getManyOrganizations(filteredData);
             return referencedOrganizations;
         }
-        const organizations = await this.organizationsService.getOrganizations(filter, limit, page, orderBy, orderDir);
+        const organizations = await this.organizationsService.getOrganizations(filter, limit, page, orderBy, orderDir, userId);
         return organizations;
     }
 
     @UseGuards(JwtAuthGuard)
     @Get(':id')
-    getOrganization(@Param('id') organizationId: string) {
+    getOrganization(
+        @Param('id') organizationId: string,
+        @Req() req,
+    ) {
         this.logger.debug(`GET/organizations/:id - get organization`, 'debug');
-        return this.organizationsService.getOrganization(organizationId);
+        const userId = getUserIdFromToken(req.headers.authorization);
+        return this.organizationsService.getOrganization(organizationId, userId);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -78,7 +87,7 @@ export class OrganizationsController {
     async updateOrganization(
         @Res() res,
         @Param('id') id: string,
-        @Body() OrganizationBody: Organizations,
+        @Body() OrganizationBody: CreateOrganizationDto,
     ) {
         this.logger.debug(`PUT/organizations/:id - update organization`, 'debug');
         const updated = await this.organizationsService.updateOrganization(id, OrganizationBody);

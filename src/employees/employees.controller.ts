@@ -10,34 +10,31 @@ import {
     NotFoundException,
     Res,
     Logger,
-    forwardRef,
-    Inject,
     UseGuards,
+    Req,
 } from '@nestjs/common';
 
 import { EmployeesService } from './employees.service';
-import { Employees } from './employees.model';
-import { PropertiesService } from '../properties/properties.service';
-import { AppGateway } from '../app.gateway';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { getUserIdFromToken } from '../utils/utils';
+import { CreateEmployeeDto } from './dto/create-employee.dto';
 
 @Controller('employees')
 export class EmployeesController {
-    logger = new Logger('EmployeesController');
+    private readonly logger = new Logger('EmployeesController');
     constructor(
         private readonly employeesService: EmployeesService,
-        @Inject(forwardRef(() => PropertiesService))
-        private gateway: AppGateway,
     ) { }
 
     @UseGuards(JwtAuthGuard)
     @Post()
     async addEmployee(
         @Res() res,
-        @Body() EmployeeBody: Employees,
+        @Body() EmployeeBody: CreateEmployeeDto,
     ) {
         this.logger.debug(`POST/employees - addEmployee ${EmployeeBody.firstName}`, 'debug');
-        const data = await this.employeesService.insertEmployee(EmployeeBody);
+        const userId = getUserIdFromToken(res.req.headers.authorization);
+        const data = await this.employeesService.insertEmployee(EmployeeBody, userId);
         if (!data) {
             throw new NotFoundException('Id does not exist!');
         }
@@ -50,6 +47,7 @@ export class EmployeesController {
     @UseGuards(JwtAuthGuard)
     @Get()
     async getAllEmployees(
+        @Req() req,
         @Query('filter') filter: string,
         @Query('limit') limit: string,
         @Query('page') page: string,
@@ -57,15 +55,20 @@ export class EmployeesController {
         @Query('orderDir') orderDir: string,
     ) {
         this.logger.debug(`GET/employees/ - get all Employees`, 'debug');
-        const employees = await this.employeesService.getEmployees(filter, limit, page, orderBy, orderDir);
+        const userId = getUserIdFromToken(req.headers.authorization);
+        const employees = await this.employeesService.getEmployees(filter, limit, page, orderBy, orderDir, userId);
         return employees;
     }
 
     @UseGuards(JwtAuthGuard)
     @Get(':id')
-    getEmployee(@Param('id') employeeId: string) {
-        // this.logger.debug(`GET/employees/:id - get employee ${employeeId}`, 'debug');
-        return this.employeesService.getEmployee(employeeId);
+    getEmployee(
+        @Param('id') employeeId: string,
+        @Req() req,
+    ) {
+        this.logger.debug(`GET/employees/:id - get employee ${employeeId}`, 'debug');
+        const userId = getUserIdFromToken(req.headers.authorization);
+        return this.employeesService.getEmployee(employeeId, userId);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -73,7 +76,7 @@ export class EmployeesController {
     async updateEmployee(
         @Res() res,
         @Param('id') id: string,
-        @Body() EmployeeBody: Employees,
+        @Body() EmployeeBody: CreateEmployeeDto,
     ) {
         this.logger.debug(`PUT/employees/:id - update employee`, 'debug');
         const updated = await this.employeesService.updateEmployee(id, EmployeeBody);

@@ -17,15 +17,14 @@ import {
 } from '@nestjs/common';
 
 import { PropertiesService } from './properties.service';
-import { Properties } from './properties.model';
 import { EmployeesService } from '../employees/employees.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { JwtService } from '@nestjs/jwt';
-import { decode } from 'jsonwebtoken';
+import { getUserIdFromToken } from '../utils/utils';
+import { CreatePropertyDto } from './dto/create-properties.dto';
 
 @Controller('properties')
 export class PropertiesController {
-    logger = new Logger('PropertiesController');
+    private readonly logger = new Logger('PropertiesController');
     constructor(
         private readonly propertiesService: PropertiesService,
         @Inject(forwardRef(() => EmployeesService))
@@ -42,10 +41,11 @@ export class PropertiesController {
     @Post()
     async addProperty(
         @Res() res,
-        @Body() PropertyBody: Properties,
+        @Body() PropertyBody: CreatePropertyDto,
     ) {
         this.logger.debug(`POST/properties/ - add property`, 'debug');
-        const data = await this.propertiesService.insertProperty(PropertyBody);
+        const userId = getUserIdFromToken(res.req.headers.authorization);
+        const data = await this.propertiesService.insertProperty(PropertyBody, userId);
         if (!data) {
             throw new Error('Failed to create');
         }
@@ -65,22 +65,26 @@ export class PropertiesController {
         @Query('orderBy') orderBy: string,
         @Query('orderDir') orderDir: string,
     ) {
-        console.log(decode(req.headers.authorization.replace(/^Bearer\s+/, '')));
         this.logger.debug(`GET/properties/ - get all properties`, 'debug');
         const filteredData = JSON.parse(filter);
+        const userId = getUserIdFromToken(req.headers.authorization);
         if (filteredData.hasOwnProperty('id') && filteredData.id.length !== 0) {
             const referencedProperties = await this.propertiesService.getManyProperties(filteredData);
             return referencedProperties;
         }
-        const properties = await this.propertiesService.getProperties(filter, limit, page, orderBy, orderDir);
+        const properties = await this.propertiesService.getProperties(filter, limit, page, orderBy, orderDir, userId);
         return properties;
     }
 
     @UseGuards(JwtAuthGuard)
     @Get(':id')
-    getProperty(@Param('id') propertyId: string) {
+    getProperty(
+        @Param('id') propertyId: string,
+        @Req() req,
+    ) {
         this.logger.debug(`GET/properties/ - get property`, 'debug');
-        return this.propertiesService.getProperty(propertyId);
+        const userId = getUserIdFromToken(req.headers.authorization);
+        return this.propertiesService.getProperty(propertyId, userId);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -88,7 +92,7 @@ export class PropertiesController {
     async updateProperty(
         @Res() res,
         @Param('id') id: string,
-        @Body() PropertiesBody: Properties,
+        @Body() PropertiesBody: CreatePropertyDto,
     ) {
         this.logger.debug(`PUT/properties/:id - update property`, 'debug');
         const updated = await this.propertiesService.updateProperty(id, PropertiesBody);

@@ -3,17 +3,16 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { EmployeesController } from './employees.controller';
 import { EmployeesService } from './employees.service';
-import { EmployeesSchema } from './employees.model';
+import { EmployeesSchema, Employees } from './schemas/employees.schema';
 import { PropertiesModule } from '../properties/properties.module';
-import { AppGateway } from '../app.gateway';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'Employees', schema: EmployeesSchema }]),
+    MongooseModule.forFeature([{ name: Employees.name, schema: EmployeesSchema }]),
     forwardRef(() => PropertiesModule),
   ],
   controllers: [EmployeesController],
-  providers: [EmployeesService, AppGateway],
+  providers: [EmployeesService],
   exports: [EmployeesService],
 })
 export class EmployeesModule {}

@@ -2,9 +2,12 @@ import { IFileManager } from './IFileManager.interface';
 import { NotFoundException } from '@nestjs/common/exceptions';
 import { v4 as uuidv4 } from 'uuid';
 import { Injectable } from '@nestjs/common';
-
 const AWS = require('aws-sdk');
-AWS.config.update({ accessKeyId: 'AKIA2KGO27OM5ZJBBIHQ', secretAccessKey: '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' });
+
+AWS.config.update({
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
 const s3 = new AWS.S3();
 
 @Injectable()
@@ -78,7 +81,7 @@ export class S3FileManagerService implements IFileManager {
                     const url = s3.getSignedUrl('getObject', {
                         Bucket: process.env.FILE_MANAGER_S3_BUCKET,
                         Key: process.env.FILE_MANAGER_S3_FOLDER + file.fileName,
-                        Expires: 3600,
+                        Expires: Number(process.env.FILE_MANAGER_S3_URL_EXPIRE_TIMEOUT),
                     });
                     resolve({
                         _id: file.id,

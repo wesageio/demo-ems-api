@@ -9,7 +9,6 @@ import { EmployeesModule } from './employees/employees.module';
 import { SettingsModule } from './settings/settings.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { PropertiesModule } from './properties/properties.module';
-import { AppGateway } from './app.gateway';
 import { FileManagerModule } from './common/fileManager/FileManager.module';
 import { AuthModule } from './auth/auth.module';
 
@@ -35,6 +34,6 @@ import { AuthModule } from './auth/auth.module';
         ),
     ],
     controllers: [AppController],
-    providers: [AppService, AppGateway],
+    providers: [AppService],
 })
 export class AppModule { }

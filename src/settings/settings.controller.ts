@@ -12,6 +12,7 @@ import {
 import { SettingsService } from './settings.service';
 import { Settings } from './settings.model';
 import { AuthService } from '../auth/auth.service';
+import { getUserIdFromToken } from '../utils/utils';
 
 @Controller('settings')
 export class SettingsController {
@@ -36,23 +37,23 @@ export class SettingsController {
         return this.settingsService.getSetting(settingsId);
     }
 
-    // @Put(':id')
-    // async updateSettings(
-    //     @Res() res,
-    //     @Param('id') id: string,
-    //     @Body() SettingsBody: any,
-    // ) {
-    //     const userId = SettingsBody.userId;
-    //     const updated = await this.settingsService.updateSettings(id, SettingsBody);
-    //     if (!updated) {
-    //         throw new NotFoundException('Id does not exist!');
-    //     }
-    //     if (SettingsBody.hasOwnProperty('newPassword')) {
-    //         await this.usersService.updateUser(userId, SettingsBody);
-    //     }
-    //     return res.status(200).json({
-    //         message: 'Settings has been successfully updated',
-    //         updated,
-    //     });
-    // }
+    @Put(':id')
+    async updateSettings(
+        @Res() res,
+        @Param('id') id: string,
+        @Body() SettingsBody: any,
+    ) {
+        const userId = getUserIdFromToken(res.req.headers.authorization);
+        const updated = await this.settingsService.updateSettings(id, SettingsBody);
+        if (!updated) {
+            throw new NotFoundException('Id does not exist!');
+        }
+        if (SettingsBody.hasOwnProperty('newPassword')) {
+            await this.usersService.updateUser(userId, SettingsBody);
+        }
+        return res.status(200).json({
+            message: 'Settings has been successfully updated',
+            updated,
+        });
+    }
 }

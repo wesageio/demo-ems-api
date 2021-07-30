@@ -2,18 +2,18 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { Properties } from './properties.model';
 import { filterForQuery } from '../utils/utils';
 import { IFileManager } from '../common/fileManager/IFileManager.interface';
+import { Properties, PropertiesDocument } from './schemas/properties.schema';
 
 @Injectable()
 export class PropertiesService {
     constructor(
-        @InjectModel('Properties') private readonly propertiesModel: Model<Properties>,
+        @InjectModel(Properties.name) private readonly propertiesModel: Model<PropertiesDocument>,
         private fileManager: IFileManager,
     ) { }
 
-    async insertProperty(body) {
+    async insertProperty(body, userId) {
         const modifiedAttachments = await this.fileManager.insertFile(body.attachments);
         const data = Object.assign({}, body, { attachments: modifiedAttachments ? modifiedAttachments : body.attachments });
         const newProperty = new this.propertiesModel({
@@ -25,13 +25,15 @@ export class PropertiesService {
             warranty: body.warranty,
             status: body.status,
             attachments: data.attachments,
+            authorId: userId,
         });
         const result = await newProperty.save();
         return result;
     }
 
-    async getProperties(filter: string, limit: string, page: string, orderBy: string, orderDir: string) {
+    async getProperties(filter: string, limit: string, page: string, orderBy: string, orderDir: string, userId: string) {
         const parsedFilter = JSON.parse(filter);
+        parsedFilter.authorId = userId;
         const filterData = filterForQuery(parsedFilter);
         const maxNumber = parseInt(limit);
         const skipNumber = (parseInt(page) - 1) * parseInt(limit);
@@ -45,9 +47,9 @@ export class PropertiesService {
             .skip(skipNumber)
             .sort(sortData).exec();
 
-        const dataWithS3 = await this.getS3Paths(data);
-        data.attachments = dataWithS3;
-        const count = await this.propertiesModel.countDocuments();
+        await this.getS3Paths(data);
+        const count = await this.propertiesModel.countDocuments({authorId: filterData.authorId});
+
         return {
             data,
             count,
@@ -59,17 +61,15 @@ export class PropertiesService {
             .find({ _id: { $in: filter.id }})
             .exec();
 
-        const dataWithS3 = await this.getS3Paths(data);
-        data.attachments = dataWithS3;
-        const count = await this.propertiesModel.countDocuments();
+        await this.getS3Paths(data);
         return {
             data,
-            count,
+            count: data.length,
         };
     }
 
-    async getProperty(propertyId: string) {
-        const property = await this.findProperty(propertyId);
+    async getProperty(propertyId: string, userId: string) {
+        const property = await this.findProperty(propertyId, userId);
         const attachments = await this.fileManager.getFiles(property.attachments);
         property.attachments = attachments;
         return { property };
@@ -92,10 +92,10 @@ export class PropertiesService {
         return await this.propertiesModel.deleteMany({ _id: { $in: ids } });
     }
 
-    private async findProperty(id: string): Promise<Properties> {
+    private async findProperty(id: string, userId: string): Promise<PropertiesDocument> {
         let property;
         try {
-            property = await this.propertiesModel.findById(id).exec();
+            property = await this.propertiesModel.findOne({_id: id, authorId: userId}).exec();
         } catch (error) {
             throw new NotFoundException('Could not find property.');
         }

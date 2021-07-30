@@ -3,12 +3,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { OrganizationsController } from './organizations.controller';
 import { OrganizationsService } from './organizations.service';
-import { OrganizationsSchema } from './organizations.model';
 import { EmployeesModule } from '../employees/employees.module';
+import { OrganizationsSchema , Organizations } from './schemas/organizations.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'Organizations', schema: OrganizationsSchema }]),
+    MongooseModule.forFeature([{ name: Organizations.name, schema: OrganizationsSchema }]),
     EmployeesModule,
   ],
   controllers: [OrganizationsController],

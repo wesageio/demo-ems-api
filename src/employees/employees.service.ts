@@ -2,16 +2,16 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { Employees } from './employees.model';
 import { filterForQuery } from '../utils/utils';
+import { Employees, EmployeesDocument } from './schemas/employees.schema';
 
 @Injectable()
 export class EmployeesService {
     constructor(
-        @InjectModel('Employees') private readonly employeesModel: Model<Employees>,
+        @InjectModel(Employees.name) private readonly employeesModel: Model<EmployeesDocument>,
     ) { }
 
-    async insertEmployee(body) {
+    async insertEmployee(body, userId) {
         const newEmployee = new this.employeesModel({
             firstName: body.firstName,
             surname: body.surname,
@@ -21,13 +21,15 @@ export class EmployeesService {
             organization: body.organization,
             property: body.property,
             workingStatus: body.workingStatus,
+            authorId: userId,
         });
         const result = await newEmployee.save();
         return result;
     }
 
-    async getEmployees(filter: string, limit: string, page: string, orderBy: string, orderDir: string) {
+    async getEmployees(filter: string, limit: string, page: string, orderBy: string, orderDir: string, userId: string) {
         const parsedFilter = JSON.parse(filter);
+        parsedFilter.authorId = userId;
         const filterData = filterForQuery(parsedFilter);
         const maxNumber = parseInt(limit);
         const skipNumber = (parseInt(page) - 1) * parseInt(limit);
@@ -40,7 +42,9 @@ export class EmployeesService {
             .skip(skipNumber)
             .sort(sortData)
             .exec();
-        const count = await this.employeesModel.countDocuments();
+
+        const count = await this.employeesModel.countDocuments({authorId: filterData.authorId});
+
         return {
             data,
             count,
@@ -68,8 +72,8 @@ export class EmployeesService {
     //         .exec();
     // }
 
-    async getEmployee(employeeId: string) {
-        const employee = await this.findEmployee(employeeId);
+    async getEmployee(employeeId: string, userId: string) {
+        const employee = await this.findEmployee(employeeId, userId);
         return employee;
     }
 
@@ -126,10 +130,10 @@ export class EmployeesService {
         return await this.employeesModel.deleteMany({ _id: { $in: ids } });
     }
 
-    async findEmployee(id: string): Promise<Employees> {
+    async findEmployee(id: string, userId: string): Promise<Employees> {
         let employee;
         try {
-            employee = await this.employeesModel.findById(id).exec();
+            employee = await this.employeesModel.findOne({_id: id, authorId: userId}).exec();
         } catch (error) {
             throw new NotFoundException('Could not find employee.');
         }
