@@ -36,6 +36,7 @@ export class EmployeesService {
         const sortData = {
             [orderBy]: orderDir,
         };
+
         const data = await this.employeesModel
             .find(filterData)
             .limit(maxNumber)

@@ -5,7 +5,7 @@ export class CreatePropertyDto {
     readonly purchaseDate: Date;
     readonly warranty: number;
     readonly purchaseCost: number;
-    readonly status: number;
+    readonly status: string;
     readonly attachments: object[];
     readonly authorId: any;
 }
