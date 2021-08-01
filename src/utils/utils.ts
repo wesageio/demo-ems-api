@@ -4,7 +4,7 @@ import { decode } from 'jsonwebtoken';
 export const filterForQuery = (filter: any) => {
     if (filter.hasOwnProperty('q')) {
         return {
-            $where: `JSON.stringify(this).indexOf('${filter.q}')!=-1`,
+            $where: `JSON.stringify(this).indexOf('${filter.q.replace(/"|'/g, '')}')!=-1`,
             authorId: filter['authorId'],
         };
     } else {
