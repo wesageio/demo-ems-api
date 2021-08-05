@@ -19,6 +19,7 @@ import { CreateOrganizationDto } from './dto/create-organizations.dto';
 import { EmployeesService } from '../employees/employees.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { getUserIdFromToken } from '../utils/utils';
+import { Queries } from '../employees/customQueries/queries';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -26,10 +27,11 @@ export class OrganizationsController {
     constructor(
         private readonly organizationsService: OrganizationsService,
         private employeesService: EmployeesService,
+        private queryService: Queries,
     ) { }
 
     removeOrganizationFromEmployee = async (imapAccounts) => {
-        await this.employeesService.removeDeletedOrganization(imapAccounts);
+        await this.queryService.removeDeletedOrganization(imapAccounts);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -63,10 +65,10 @@ export class OrganizationsController {
         this.logger.debug(`GET/organizations/ - get all organizations`, 'debug');
         const filteredData = JSON.parse(filter);
         const userId = getUserIdFromToken(req.headers.authorization);
-        if (filteredData.hasOwnProperty('id') && filteredData.id.length !== 0) {
-            const referencedOrganizations = await this.organizationsService.getManyOrganizations(filteredData);
-            return referencedOrganizations;
-        }
+        // if (filteredData.hasOwnProperty('id') && filteredData.id.length !== 0) {
+        //     const referencedOrganizations = await this.organizationsService.getManyOrganizations(filteredData);
+        //     return referencedOrganizations;
+        // }
         const organizations = await this.organizationsService.getOrganizations(filter, limit, page, orderBy, orderDir, userId);
         return organizations;
     }

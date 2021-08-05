@@ -3,13 +3,18 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { EmployeesController } from './employees.controller';
 import { EmployeesService } from './employees.service';
-import { EmployeesSchema, Employees } from './schemas/employees.schema';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Employees } from './schemas/employees.entity';
+import { ConfigModule } from '@nestjs/config';
 import { PropertiesModule } from '../properties/properties.module';
+import { OrganizationsModule } from '../organizations/organizations.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Employees.name, schema: EmployeesSchema }]),
+    ConfigModule.forRoot(),
+    TypeOrmModule.forFeature([Employees]),
     forwardRef(() => PropertiesModule),
+    // forwardRef(() => OrganizationsModule),
   ],
   controllers: [EmployeesController],
   providers: [EmployeesService],

@@ -10,9 +10,9 @@ import {
 } from '@nestjs/common';
 
 import { SettingsService } from './settings.service';
-import { Settings } from './settings.model';
 import { AuthService } from '../auth/auth.service';
 import { getUserIdFromToken } from '../utils/utils';
+import { CreateSettingsDto } from './create-settings.dto';
 
 @Controller('settings')
 export class SettingsController {
@@ -23,7 +23,7 @@ export class SettingsController {
     @Post()
     async createSettings(
         @Res() res,
-        @Body() SettingsBody: Settings,
+        @Body() SettingsBody: CreateSettingsDto,
     ) {
         const data = await this.settingsService.insertSettings(SettingsBody);
         return res.status(200).json({

@@ -1,15 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
 
-import { Settings } from './settings.model';
+import { Settings } from './settings.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class SettingsService {
     constructor(
-        @InjectModel('Settings') private readonly settingsModel: Model<Settings>,
+        @InjectRepository(Settings)
+        private readonly settingsRepository: Repository<Settings>,
     ) {
-        this.settingsModel.collection.countDocuments().then(async (res) => {
+        this.settingsRepository.count().then(async (res) => {
             if (res === 0) {
                 const initialized = await this.insertSettings({
                     _id : '5fe8a719688fb0167cca8fc4',
@@ -26,14 +27,14 @@ export class SettingsService {
     }
 
     async insertSettings(body) {
-        const newSettings = new this.settingsModel({
-            _id: body._id,
+        const newSettings = this.settingsRepository.create({
+            id: body._id,
             maxAttachmentSize: body.maxAttachmentSize,
             defaultNumberOfEmployees: body.defaultNumberOfEmployees,
             defaultNumberOfEquipments: body.defaultNumberOfEquipments,
             defaultNumberOfOrganizations: body.defaultNumberOfOrganizations,
         });
-        const result = await newSettings.save();
+        const result = await this.settingsRepository.save(newSettings);
         return result;
     }
 
@@ -42,19 +43,22 @@ export class SettingsService {
     }
 
     async updateSettings(id, body): Promise<any> {
-        return await this.settingsModel.findByIdAndUpdate(id, body, { new: true });
+        return await this.settingsRepository.update(
+            { id: id },
+            body,
+        );
     }
 
     private async getSettings(id: string): Promise<Settings> {
-        let user;
+        let settings;
         try {
-            user = await this.settingsModel.findById(id).exec();
+            settings = await this.settingsRepository.findOne({id: id});
         } catch (error) {
-            throw new NotFoundException('Could not find user.');
+            throw new NotFoundException('Could not find settings.');
         }
-        if (!user) {
-            throw new NotFoundException('Could not find user.');
+        if (!settings) {
+            throw new NotFoundException('Could not find settings.');
         }
-        return user;
+        return settings;
     }
 }

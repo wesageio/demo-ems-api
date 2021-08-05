@@ -90,15 +90,6 @@ export class EmployeesController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Put()
-    async updateEmployees(
-        @Res() res, @Body() body,
-    ) {
-        this.logger.debug(`PUT/employees - update employees`, 'debug');
-        await this.employeesService.updateEmployees(body.ids, body.playPauseStatus);
-    }
-
-    @UseGuards(JwtAuthGuard)
     @Delete(':id')
     async removeEmployee(@Res() res, @Param('id') employeeId: string) {
         this.logger.debug(`DELETE/employees/:id - delete employee`, 'debug');

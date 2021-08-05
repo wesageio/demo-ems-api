@@ -1,22 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ObjectID } from 'bson';
 
 import { filterForQuery } from '../utils/utils';
 import { IFileManager } from '../common/fileManager/IFileManager.interface';
-import { Properties, PropertiesDocument } from './schemas/properties.schema';
+import { Repository } from 'typeorm';
+import { Properties } from './schemas/properties.entity';
 
 @Injectable()
 export class PropertiesService {
     constructor(
-        @InjectModel(Properties.name) private readonly propertiesModel: Model<PropertiesDocument>,
+        @InjectRepository(Properties)
+        private readonly propertiesRepository: Repository<Properties>,
         private fileManager: IFileManager,
     ) { }
 
     async insertProperty(body, userId) {
         const modifiedAttachments = await this.fileManager.insertFile(body.attachments);
         const data = Object.assign({}, body, { attachments: modifiedAttachments ? modifiedAttachments : body.attachments });
-        const newProperty = new this.propertiesModel({
+        const newProperty = this.propertiesRepository.create({
             name: body.name,
             category: body.category,
             description: body.description,
@@ -27,28 +29,31 @@ export class PropertiesService {
             attachments: data.attachments,
             authorId: userId,
         });
-        const result = await newProperty.save();
+        const result = await this.propertiesRepository.save(newProperty);
         return result;
     }
 
-    async getProperties(filter: string, limit: string, page: string, orderBy: string, orderDir: string, userId: string) {
-        const parsedFilter = JSON.parse(filter);
-        parsedFilter.authorId = userId;
-        const filterData = filterForQuery(parsedFilter);
+    async getProperties(filter: any, limit: string, page: string, orderBy: string, orderDir: string, userId: string) {
+        filter.authorId = userId;
+        const filterData = filterForQuery(filter);
         const maxNumber = parseInt(limit);
         const skipNumber = (parseInt(page) - 1) * parseInt(limit);
         const sortData = {
             [orderBy]: orderDir,
         };
 
-        const data = await this.propertiesModel
-            .find(filterData)
-            .limit(maxNumber)
-            .skip(skipNumber)
-            .sort(sortData).exec();
-
+        const data = await this.propertiesRepository.find({
+            where: filterData,
+            order: sortData,
+            skip: skipNumber,
+            take: maxNumber,
+        });
+            // .find(filterData)
+            // .limit(maxNumber)
+            // .skip(skipNumber)
+            // .sort(sortData).exec();
         await this.getS3Paths(data);
-        const count = await this.propertiesModel.countDocuments({authorId: filterData.authorId});
+        const count = await this.propertiesRepository.count({authorId: filterData.authorId});
 
         return {
             data,
@@ -56,23 +61,26 @@ export class PropertiesService {
         };
     }
 
-    async getManyProperties(filter: any) {
-        const data = await this.propertiesModel
-            .find({ _id: { $in: filter.id }})
-            .exec();
+    // async getManyProperties(filter: any) {
+    //     const data = await this.propertiesModel
+    //         .find({ _id: { $in: filter.id }})
+    //         .exec();
 
-        await this.getS3Paths(data);
-        return {
-            data,
-            count: data.length,
-        };
-    }
+    //     await this.getS3Paths(data);
+    //     return {
+    //         data,
+    //         count: data.length,
+    //     };
+    // }
 
     async getProperty(propertyId: string, userId: string) {
         const property = await this.findProperty(propertyId, userId);
-        const attachments = await this.fileManager.getFiles(property.attachments);
-        property.attachments = attachments;
-        return { property };
+        if (property.attachments) {
+            await this.fileManager.getFiles(property.attachments);
+        }
+        return {
+            property,
+        };
     }
 
     async updateProperty(id, body): Promise<any> {
@@ -80,22 +88,25 @@ export class PropertiesService {
         if (modifiedAttachments) {
             body = Object.assign({}, body, { attachments: modifiedAttachments });
         }
-        return await this.propertiesModel.findByIdAndUpdate(id, body, { new: true });
+        return await this.propertiesRepository.update(
+            { id: new ObjectID(id) },
+            body,
+        );
     }
 
     async deleteProperty(propertyId: string) {
-        return await this.propertiesModel.deleteOne({ _id: propertyId }).exec();
+        return await this.propertiesRepository.delete(propertyId);
     }
 
     async deleteProperties(propertyIds): Promise<any> {
         const { ids } = propertyIds;
-        return await this.propertiesModel.deleteMany({ _id: { $in: ids } });
+        return await this.propertiesRepository.delete(ids);
     }
 
-    private async findProperty(id: string, userId: string): Promise<PropertiesDocument> {
+    private async findProperty(id: string, userId: string): Promise<Properties> {
         let property;
         try {
-            property = await this.propertiesModel.findOne({_id: id, authorId: userId}).exec();
+            property = await this.propertiesRepository.findOne(id, {where: {authorId: userId}});
         } catch (error) {
             throw new NotFoundException('Could not find property.');
         }
@@ -107,8 +118,10 @@ export class PropertiesService {
 
     private async getS3Paths(data: Array<any>) {
         const dataWithS3Paths = data.map(async item => {
-            const attachments = await this.fileManager.getFiles(item.attachments);
-            item.attachments = attachments;
+            if (item.attachments && item.attachments.length !== 0) {
+                const attachments = await this.fileManager.getFiles(item.attachments);
+                item.attachments = attachments;
+            }
         });
         return Promise.all(dataWithS3Paths);
     }

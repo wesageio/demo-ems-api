@@ -11,27 +11,28 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { PropertiesModule } from './properties/properties.module';
 import { FileManagerModule } from './common/fileManager/FileManager.module';
 import { AuthModule } from './auth/auth.module';
+import { ConfigurationModule } from './configurations/config.module';
+import { DatabaseModule } from './configurations/database.module';
 
 @Module({
     imports: [
-        ConfigModule.forRoot({
-            isGlobal: true,
-        }),
+        ConfigurationModule,
         ScheduleModule.forRoot(),
+        DatabaseModule,
         AuthModule,
         FileManagerModule,
-        EmployeesModule,
-        OrganizationsModule,
         PropertiesModule,
+        OrganizationsModule,
+        EmployeesModule,
         SettingsModule,
-        MongooseModule.forRoot(
-            `mongodb://${process.env.MONGO_HOSTNAME}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`,
-            {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-                useFindAndModify: false,
-            },
-        ),
+        // MongooseModule.forRoot(
+        //     `mongodb://${process.env.MONGO_HOSTNAME}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`,
+        //     {
+        //         useNewUrlParser: true,
+        //         useUnifiedTopology: true,
+        //         useFindAndModify: false,
+        //     },
+        // ),
     ],
     controllers: [AppController],
     providers: [AppService],

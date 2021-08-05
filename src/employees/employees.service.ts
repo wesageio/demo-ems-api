@@ -3,16 +3,22 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
 import { filterForQuery } from '../utils/utils';
-import { Employees, EmployeesDocument } from './schemas/employees.schema';
+// import { Employees, EmployeesDocument } from './schemas/employees.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Employees } from './schemas/employees.entity';
+import { Repository, getMongoRepository } from 'typeorm';
+import { ObjectID } from 'bson';
+import { User } from 'dist/user/user.entity';
 
 @Injectable()
 export class EmployeesService {
     constructor(
-        @InjectModel(Employees.name) private readonly employeesModel: Model<EmployeesDocument>,
+        @InjectRepository(Employees)
+        private readonly employeesRepository: Repository<Employees>,
     ) { }
 
     async insertEmployee(body, userId) {
-        const newEmployee = new this.employeesModel({
+        const newEmployee = this.employeesRepository.create({
             firstName: body.firstName,
             surname: body.surname,
             dateOfBirth: body.dateOfBirth,
@@ -23,7 +29,7 @@ export class EmployeesService {
             workingStatus: body.workingStatus,
             authorId: userId,
         });
-        const result = await newEmployee.save();
+        const result = await this.employeesRepository.save(newEmployee);
         return result;
     }
 
@@ -36,14 +42,14 @@ export class EmployeesService {
         const sortData = {
             [orderBy]: orderDir,
         };
-        const data = await this.employeesModel
-            .find(filterData)
-            .limit(maxNumber)
-            .skip(skipNumber)
-            .sort(sortData)
-            .exec();
 
-        const count = await this.employeesModel.countDocuments({authorId: filterData.authorId});
+        const data = await this.employeesRepository.find({
+            where: filterData,
+            order: sortData,
+            skip: skipNumber,
+            take: maxNumber,
+        });
+        const count = await this.employeesRepository.count({authorId: filterData.authorId});
 
         return {
             data,
@@ -74,20 +80,19 @@ export class EmployeesService {
 
     async getEmployee(employeeId: string, userId: string) {
         const employee = await this.findEmployee(employeeId, userId);
-        return employee;
+        return {
+            employee,
+        };
     }
 
     async isExistReferenceInEmployee(fieldId: string, field: string) {
-        const employee = await this.employeesModel.find({ [field]: fieldId });
+        const employee = await this.employeesRepository.find({ [field]: fieldId });
         return employee;
     }
 
     async isExistMultiplsReferenceInEmployee(filter: any, field: any) {
-        const data = await this.employeesModel
-            .find({ [field]: { $in: filter.ids } })
-            .populate('sockId')
-            .populate('serverId')
-            .exec();
+        const repository = getMongoRepository(Employees);
+        const data = await repository.find({ [field]: { $in: filter.ids } });
         return data;
     }
 
@@ -98,42 +103,25 @@ export class EmployeesService {
                 Object.assign(body, {$unset: {[item]: 1 }});
             }
         });
-        return await this.employeesModel.findByIdAndUpdate(id, body, { new: true })
-            .populate('sockId')
-            .populate('serverId');
-    }
-
-    async updateEmployees(ids, playPauseStatus): Promise<any> {
-        return await this.employeesModel.updateMany({ _id: { $in: ids } },
-            { $set: { playPauseStatus } },
-            { upsert: true });
-    }
-
-    async removeDeletedOrganization(ids): Promise<any> {
-        return await this.employeesModel.updateMany({ _id: { $in: ids } },
-            { $unset: {organization: 1}},
-            { upsert: true });
-    }
-
-    async removeDeletedPropertiesFromEmployees(employee, propertyId): Promise<any> {
-        return await this.employeesModel.updateMany({ _id: employee._id },
-            { $pull: { property: { $in: propertyId } } },
-            { upsert: true });
+        return await this.employeesRepository.update(
+            { id: new ObjectID(id) },
+            body,
+        );
     }
 
     async deleteEmployee(employeeId: string) {
-        return await this.employeesModel.deleteOne({ _id: employeeId }).exec();
+        return await this.employeesRepository.delete(employeeId);
     }
 
     async deleteEmployees(employeesIds): Promise<any> {
         const { ids } = employeesIds;
-        return await this.employeesModel.deleteMany({ _id: { $in: ids } });
+        return await this.employeesRepository.delete(ids);
     }
 
     async findEmployee(id: string, userId: string): Promise<Employees> {
         let employee;
         try {
-            employee = await this.employeesModel.findOne({_id: id, authorId: userId}).exec();
+            employee = await this.employeesRepository.findOne(id, {where: {authorId: userId}});
         } catch (error) {
             throw new NotFoundException('Could not find employee.');
         }
