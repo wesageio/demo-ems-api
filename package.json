@@ -30,6 +30,7 @@
     "@nestjs/platform-express": "^6.0.0",
     "@nestjs/platform-socket.io": "^7.6.13",
     "@nestjs/schedule": "^0.4.2",
+    "@nestjs/typeorm": "^8.0.2",
     "@nestjs/websockets": "^7.6.13",
     "aws-sdk": "^2.953.0",
     "axios": "^0.19.2",
@@ -45,7 +46,8 @@
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.1.12",
     "rimraf": "^2.6.2",
-    "rxjs": "^6.3.3",
+    "rxjs": "^7.3.0",
+    "typeorm": "^0.2.36",
     "uuid": "^8.3.2",
     "webhdfs": "^1.2.0"
   },
