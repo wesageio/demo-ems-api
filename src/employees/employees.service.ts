@@ -1,14 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 
 import { filterForQuery } from '../utils/utils';
-// import { Employees, EmployeesDocument } from './schemas/employees.schema';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Employees } from './schemas/employees.entity';
 import { Repository, getMongoRepository } from 'typeorm';
 import { ObjectID } from 'bson';
-import { User } from 'dist/user/user.entity';
 
 @Injectable()
 export class EmployeesService {
