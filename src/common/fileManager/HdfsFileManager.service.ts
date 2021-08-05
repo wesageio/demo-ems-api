@@ -28,7 +28,6 @@ export class HdfsFileManagerService implements IFileManager {
     }
 
     public async insertFile(files: Array<any>) {
-        console.log('HDFS INSERT');
         if (files && files.length !== 0) {
             const promises = files.map(file => {
                 if (file.data) {

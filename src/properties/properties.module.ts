@@ -5,16 +5,21 @@ import { PropertiesController } from './properties.controller';
 import { PropertiesService } from './properties.service';
 import { EmployeesModule } from '../employees/employees.module';
 import { FileManagerModule } from '../common/fileManager/FileManager.module';
-import { PropertiesSchema , Properties } from './schemas/properties.schema';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+import { Properties } from './schemas/properties.entity';
+import { Queries } from '../employees/customQueries/queries';
 
 @Module({
     imports: [
-        MongooseModule.forFeature([{ name: Properties.name, schema: PropertiesSchema }]),
+        ConfigModule.forRoot(),
+        TypeOrmModule.forFeature([Properties]),
+        // MongooseModule.forFeature([{ name: Properties.name, schema: PropertiesSchema }]),
         FileManagerModule,
         forwardRef(() => EmployeesModule),
     ],
     controllers: [PropertiesController],
-    providers: [PropertiesService],
+    providers: [PropertiesService, Queries],
     exports: [PropertiesService],
 })
 

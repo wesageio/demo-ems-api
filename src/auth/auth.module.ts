@@ -1,19 +1,21 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt-auth.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
-import { UsersSchema , Users } from './schemas/users.schema';
+import { Users } from './schemas/users.enity';
 
 @Module({
     imports: [
         ConfigModule.forRoot(),
-        MongooseModule.forFeature([{ name: Users.name, schema: UsersSchema }]),
+        TypeOrmModule.forFeature([Users]),
+        // ConfigModule.forRoot(),
+        // MongooseModule.forFeature([{ name: Users.name, schema: UsersSchema }]),
         PassportModule,
         JwtModule.register({
             secret: process.env.JWT_SECRET,

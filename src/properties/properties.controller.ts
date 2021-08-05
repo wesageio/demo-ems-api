@@ -21,19 +21,21 @@ import { EmployeesService } from '../employees/employees.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { getUserIdFromToken } from '../utils/utils';
 import { CreatePropertyDto } from './dto/create-properties.dto';
+import { Queries } from '../employees/customQueries/queries';
 
 @Controller('properties')
 export class PropertiesController {
     private readonly logger = new Logger('PropertiesController');
     constructor(
         private readonly propertiesService: PropertiesService,
-        @Inject(forwardRef(() => EmployeesService))
+        // @Inject(forwardRef(() => EmployeesService))
         private employeesService: EmployeesService,
+        private queryService: Queries,
     ) { }
 
     removeAlreadyDeletedPropertiesFromEmployees = (employees, propertyId) => {
         employees.forEach(async (employee) => {
-            await this.employeesService.removeDeletedPropertiesFromEmployees(employee, propertyId);
+            await this.queryService.removeDeletedPropertiesFromEmployees(employee, propertyId);
         });
     }
 
@@ -68,11 +70,7 @@ export class PropertiesController {
         this.logger.debug(`GET/properties/ - get all properties`, 'debug');
         const filteredData = JSON.parse(filter);
         const userId = getUserIdFromToken(req.headers.authorization);
-        if (filteredData.hasOwnProperty('id') && filteredData.id.length !== 0) {
-            const referencedProperties = await this.propertiesService.getManyProperties(filteredData);
-            return referencedProperties;
-        }
-        const properties = await this.propertiesService.getProperties(filter, limit, page, orderBy, orderDir, userId);
+        const properties = await this.propertiesService.getProperties(filteredData, limit, page, orderBy, orderDir, userId);
         return properties;
     }
 
@@ -116,7 +114,7 @@ export class PropertiesController {
             throw new NotFoundException('Id does not exist!');
         }
         return res.status(200).json({
-            message: 'Rule has been successfully deleted',
+            message: 'Property has been successfully deleted',
             propertyDelete,
         });
     }

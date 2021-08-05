@@ -32,7 +32,6 @@ export class S3FileManagerService implements IFileManager {
     }
 
     public async insertFile(files: Array<any>) {
-        console.log('S3 INSERT');
         if (files && files.length !== 0) {
             const promises = files.map(file => {
                 if (file.data) {
